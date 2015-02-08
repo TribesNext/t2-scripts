@@ -51,6 +51,8 @@ function CommunityMailInterface::onLine(%this, %line)
 	if (trim(%line) $= "")
 	{
 		%this.primed = 1;
+		
+		tn_community_mail_requestCompleted();
 		return;
 	}
 	if (!%this.primed)
@@ -414,6 +416,9 @@ function tn_community_mail_request_send(%subject, %contents, %to, %cc)
 	%payload = %payload @ "--" @ %boundary @ %rand @ "\r\n";
 
 	// cc
+	if (trim(%cc) $= "")
+		%cc = 0; // DarkDragonDX: No CC?
+		
 	%payload = %payload @ %formelem @ "cc\"\r\n\r\n" @ %cc @ "\r\n";
 	%payload = %payload @ "--" @ %boundary @ %rand @ "\r\n";
 
@@ -446,4 +451,33 @@ function tn_community_isUserBuddy(%searchguid)
 function tn_community_isUserBlocked(%searchguid)
 {
 	return tn_community_isOnList(%searchguid, "ignore");
+}
+
+// DarkDragonDX: Hookable script callback for when a request with the mail system completes
+function tn_community_mail_requestCompleted(){ }
+
+// DarkDragonDX: Helpers function to work with the JSON (somewhat)
+function tn_community_mail_explodeJSONObject(%json)
+{
+	%json = trim(%json);
+	%json = stripChars(%json, "{}\"'");
+	// The EMail contents of a tribal invite shouldn't contain spaces so this should be safe
+	%json = strReplace(%json, ",", " ");
+	
+	return %json;
+}
+
+// %processed should have been processed with tn_community_mail_explodeJSONObject
+function tn_community_mail_getJSONElement(%processed, %element)
+{
+	%element = strlwr(%element);
+	
+	for (%i = 0; %i < getWordCount(%processed); %i++)
+	{
+		%word = strReplace(getWord(%processed, %i), ":", " ");
+		if (strlwr(getWord(%word, 0)) $= %element)
+			return getWord(%word, 1);
+	}
+	
+	return -1;
 }

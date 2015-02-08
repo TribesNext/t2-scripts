@@ -7,7 +7,7 @@
 
 // This file contains the URL and server settings for the community system.
 
-$TribesNext::Community::Host = "localhost";
+$TribesNext::Community::Host = "thyth.com";
 $TribesNext::Community::Port = 80;
 $TribesNext::Community::BaseURL = "/tn/robot/";
 

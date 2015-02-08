@@ -17,6 +17,11 @@ function ipv4_getInetAddress()
 {
 	if ($IPv4::InetAddress !$= "")
 		return;
+	if ($t2csri::isOfflineMode)
+	{
+		warn("TribesNext: Aborting routable IP address lookup due to game running in offline mode.");
+		return;
+	}
 
 	if (isObject(IPv4Connection))
 	{
@@ -64,6 +69,11 @@ function ipv4_reasonableConnection(%source, %destination)
 		{
 			// Class A LAN, check if the client is also on the same network
 			return (getSubStr(%source, 0, 2) $= "10");
+		}
+		else if (getSubStr(%destination, 0, 3) $= "127")
+		{
+			// loopback address check for servers hosted on the same system
+			return (getSubStr(%source, 0, 3) $= "127");
 		}
 		else if (getSubStr(%destination, 0, 3) $= "172" && getSubStr(%destination, 4, 2) > 15 && getSubStr(%destination, 4, 2) < 33)
 		{

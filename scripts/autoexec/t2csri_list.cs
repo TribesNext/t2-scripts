@@ -332,6 +332,21 @@ function TNbite::onDisconnect(%this) {
    %this.delete();
 }
 
+function TNbite::get(%this, %server, %query)
+{
+   %this.server = %server;
+   %this.query = %query;
+   %this.connect(%server);
+}
+
+function TNbite::onConnected(%this)
+{
+  if (%this.query !$= "") {
+   %query = "GET " @ %this.query @ " HTTP/1.1\r\nHost: " @ %this.server @ "\r\nUser-Agent: Tribes 2\r\nConnection: close\r\n\r\n";
+   %this.send(%query);
+  }
+}
+
 function NewsGui::addLine( %this, %line ) {
    %this = NewsText;
    if (firstWord(%line) $= "<tag>") {
@@ -366,31 +381,16 @@ function NewsHeadlines::onSelect( %this, %id, %text )
 //================================================================
 package t2csri_webs {
 
-function TNbite::get(%this, %server, %query)
-{
-	if ($t2csri::isOfflineMode)
-	{
-		warn("TribesNext: Running in offline mode. Aborting query to the Master List Server.");
-		return;
-	}
-	%this.server = %server;
-	%this.query = %query;
-	%this.connect(%server);
-}
-
-function TNbite::onConnected(%this)
-{
-  if (%this.query !$= "") {
-   %query = "GET " @ %this.query @ " HTTP/1.1\r\nHost: " @ %this.server @ "\r\nUser-Agent: Tribes 2\r\nConnection: close\r\n\r\n";
-   %this.send(%query);
-  }
+function CheckEmail( %bool ) {
+   if ($LaunchMode $= "Normal") return;  // Do nothing for now
+   parent::CheckEmail( %bool );
 }
 
 function LaunchTabView::addLaunchTab( %this, %text, %gui, %makeInactive ) {
    // disable currently unused tabs
-   //if (%text $= "EMAIL" || %text $= "BROWSER") parent::addLaunchTab( %this, %text, %gui, 1 );
-   if (%text $= "BROWSER") parent::addLaunchTab( %this, %text, %gui, 1 );
-   else parent::addLaunchTab( %this, %text, %gui, %makeInactive );
+   if (%text $= "EMAIL" || %text $= "BROWSER") parent::addLaunchTab( %this, %text, %gui, 1 );
+   else 
+	parent::addLaunchTab( %this, %text, %gui, %makeInactive );
 }
 function LaunchToolbarMenu::add(%this,%id,%text) {
    parent::add(%this,%id,%text);
@@ -426,7 +426,7 @@ function ClientReceivedDataBlock(%index, %total)
 
 function CreateServer(%mission, %missionType) {
    parent::CreateServer(%mission, %missionType);
-   if (!isActivePackage(t2csri_server)) schedule(2000,0,"exec","t2csri/serverGlue.cs");
+   if (!isActivePackage(t2csri_server)) exec("t2csri/serverGlue.cs");
 }
 
 function StartHeartbeat() {
@@ -455,5 +455,3 @@ function StopHeartbeat() {
 //================================================================
 };
 if (!isActivePackage(t2csri_webs)) activatepackage (t2csri_webs);
-
-exec("t2csri/postLogin.cs");

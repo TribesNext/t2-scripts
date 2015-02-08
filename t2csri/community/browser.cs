@@ -120,6 +120,14 @@ function CommunityBrowserInterface::onLine(%this, %line)
 			{
 				schedule(500, 0, MessageBoxOK, "ERROR", "Received expired certificate from community server. Is your computer's clock set correctly?");
 			}
+			
+			// DarkDragonDX: We seem to have received the community certificate, enable the browser and EMail UI's
+			for ( %i = 0; %i < LaunchTabView.tabCount(); %i++ )
+			{
+				%guiName = LaunchTabView.gui[%i];
+				if (isObject(%guiName) && (%guiName $="EmailGui" || %guiName $= "TribeandWarriorBrowserGui"))
+					LaunchTabView.setTabActive(%i, true);
+			}
 
 		// data access methods
 
@@ -1018,4 +1026,5 @@ function tn_community_browser_user_createClan(%tag, %append, %name, %info, %recr
 	tn_community_browser_processRequest("", %header @ %payload);
 }
 
-schedule(3000, 0, tn_community_Browser_request_cert);
+// DarkDragonDX: Removed this from being a schedule; it does it when it's ready now
+// schedule(3000, 0, tn_community_Browser_request_cert);

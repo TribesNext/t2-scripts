@@ -376,14 +376,29 @@ function EmailGetTextDisplay(%text)
 	%to = getLinkNameList(%toList);
 	%ccList = getRecord(%text, 5);
 	%ccLine = getLinkNameList(%ccList);
+	
+	// DarkDragonDX: Check if it's a tribal invite
+	%subjectLine = getRecord(%text, 6);
+	%emailContents = EmailGetBody(%text);
+	%senderName = getLinkName(getRecord(%text, 1), 0);
+	
+	if (getWords(%subjectLine, 0, 1) $= "Invitation to:")
+	{
+		%emailContents = tn_community_mail_explodeJSONObject(%emailContents);
+		%clanID = tn_community_mail_getJSONElement(%emailContents, "clanid");
+		%expiration = tn_community_mail_getJSONElement(%emailContents, "expire");	
+		
+		%emailContents = %senderName SPC "of clan \"" @ trim(getWords(%subjectLine, 2)) @ "\" has invited you to join their clan." NL
+		"<a:acceptinvite-" @ %clanID @ ">Accept</a> or <a:rejectinvite-" @ %clanID @ ">Reject</a> the invitation? This invitation expires at <spush><color:ADFFFA>" @ tn_community_mailui_epochToDate(%expiration) @ "<spop>.";
+	}
 
-	%from = getLinkName(getRecord(%text, 1), 0);
+	%from = %senderName;
 	%msgtext = "From: " @ %from NL
 		"To: " @ %to NL
 		"CC: " @ %ccLine NL
-		"Subject: " @ getRecord(%text, 6) NL
+		"Subject: " @ %subjectLine NL
 		"Date Sent: " @ getRecord(%text, 3) @ "\n\n" @
-		EmailGetBody(%text);
+		%emailContents;
 
 	return %prepend @ %msgtext;
 }
@@ -622,23 +637,6 @@ function DoEmailDelete(%mid, %state)
 
 	tn_community_mail_request_deleteMessage(%mid, %state);
 	tn_community_mailui_clearCheckStatus();
-}
-
-// replacing function in webemail.cs, 1017
-function EmailGui::ButtonClick(%this,%ord)
-{
-	switch(%ord)
-	{
-		case 0: // wired to inbox button
-			$TribesNext::Community::MailUI::ActiveMailbox = "inbox";
-			tn_community_mailui_clearCheckStatus();
-		case 1: // wired to deleted items button
-			$TribesNext::Community::MailUI::ActiveMailbox = "deleted";
-			tn_community_mailui_clearCheckStatus();
-		case 2: // newly wired to sent items button which was present, but hidden
-			$TribesNext::Community::MailUI::ActiveMailbox = "sentbox";
-			tn_community_mailui_clearCheckStatus();
-	}
 }
 
 // replacing function in webemail.cs, 1229
@@ -931,6 +929,25 @@ function AddressDlg::onWake(%this)
 	}
 }
 
+function tn_community_mailui_selectedBox(%box)
+{
+	switch (%box)
+	{
+		case 0: // wired to inbox button
+			$TribesNext::Community::MailUI::ActiveMailbox = "inbox";
+			tn_community_mailui_clearCheckStatus();
+			tn_community_mailui_displayBox("inbox");
+		case 1: // wired to deleted items button
+			$TribesNext::Community::MailUI::ActiveMailbox = "deleted";
+			tn_community_mailui_clearCheckStatus();
+			tn_community_mailui_displayBox("deleted");
+		case 2: // newly wired to sent items button which was present, but hidden
+			$TribesNext::Community::MailUI::ActiveMailbox = "sentbox";
+			tn_community_mailui_clearCheckStatus();
+			tn_community_mailui_displayBox("sentbox");
+	}
+}
+
 package tn_tmail
 {
 	function EmailGui::onWake(%this)
@@ -945,6 +962,11 @@ package tn_tmail
 		EM_BlockBtn.setActive( false );
 		%selId = EM_Browser.getSelectedId();
 		Canvas.pushDialog(LaunchToolbarDlg);
+		
+		// DarkDragonDX: The mailUI override for selected buttons didn't work
+		rbInbox.command = "tn_community_mailui_selectedBox(0);";
+		rbSendItems.command = "tn_community_mailui_selectedBox(2);";
+		rbDeleted.command = "tn_community_mailui_selectedBox(1);";
 
 		if ( EM_Browser.rowCount() > 0 )
 		{
@@ -966,6 +988,46 @@ package tn_tmail
 		$TribesNext::Community::MailUI::Awake = 0;
 		//error("EmailGui::onSleep: " @ %this);
 	}
+		
+	// DarkDragonDX: Overwrite this function for the "GET MAIL" Button
+	function GetEmailBtnClick()
+	{
+		// We request the TMail and when the request completes, the callback
+		// tn_community_mail_requestCompleted is executed.
+		tn_community_mail_request_getNew($TribesNext::Community::MailUI::ActiveMailbox);
+	}
+	
+	function tn_community_mail_requestCompleted()
+	{
+		parent::tn_community_mail_requestCompleted();
+		
+		// Add a small delay to make sure we have everything
+		schedule(200,0,"tn_community_mailui_displayBox", $TribesNext::Community::MailUI::ActiveMailbox);
+	}
+	
+	function GuiMLTextCtrl::onURL(%this, %url)
+	{
+		%payload = strReplace(%url, "-", " ");
+		%command = getWord(%payload, 0);
+		%identifier = getWord(%payload, 1);
+
+		switch$(%command)
+		{
+			case "acceptinvite": 
+			tn_community_browser_user_acceptInvite(%identifier);
+			EmailMessageDelete(); // This code shouldn't be executed unless we clicked on accept/reject in an invitations
+			messageBoxOK("ACCEPTED", "You have accepted the clan invitation.");
+			
+			case "rejectinvite": 
+			tn_community_browser_user_rejectInvite(%identifier); 
+			EmailMessageDelete();
+			messageBoxOK("DECLINED", "You have rejected the clan invitation.");
+
+			default: // Pass it on to anything else interested
+			parent::onURL(%this, %url);
+		}
+	}
 };
 if (!isActivePackage(tn_tmail))
 	activatePackage(tn_tmail);
+	
