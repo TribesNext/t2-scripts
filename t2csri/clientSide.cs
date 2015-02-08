@@ -290,6 +290,12 @@ function t2csri_processDownloadCompletion()
 function t2csri_gameServerHexAddress()
 {
 	%ip = ServerConnection.getAddress();
+	
+	// DarkDragonDX: Fix listen server crashes because .getAddress() returns 
+	// "local" when in listen
+	if (trim(%ip) $= "local")
+		%ip = "IP:127.0.0.1:" @ $Host::Port; // Build the local IP ourselves
+	
 	%ip = getSubStr(%ip, strstr(%ip, ":") + 1, strlen(%ip));
 	%ip = getSubStr(%ip, 0, strstr(%ip, ":"));
 	%ip = strReplace(%ip, ".", " ");
