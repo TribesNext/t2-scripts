@@ -256,6 +256,10 @@ function TribeAndWarriorBrowserGui::onWake(%this)
 	MemberList.Clear();
 	W_MemberList.clear();
 	Canvas.pushDialog(LaunchToolbarDlg);
+	
+	// DarkDragonDX: Set the BUDDYLIST and TRIBES profile
+	W_BuddyList.setProfile(ShellRedRadioProfile);
+	W_Tribes.setProfile(ShellRedRadioProfile);
 
 	if (TWBTabView.tabCount() == 0)
 	{
@@ -383,13 +387,13 @@ function GuiMLTextCtrl::onURL(%this, %url)
 	%i = 0;
 	while((%fld[%i] = getField(%url, %i)) !$= "")
 		%i++;
-
+		
 	%tribe = %fld[1];
 	%warrior = %fld[2];
 	switch$(%fld[0])
 	{
 		case "player":
-			LinkBrowser( %fld[1] , "Warrior");
+			LinkBrowser( %fld[2] , "Warrior");
 		case "clan": // used to be "tribe" in the Dynamix system -- it is this in TribesNext
 			LaunchTabView.viewTab("BROWSER", TribeAndWarriorBrowserGui, 0);
 			TWBTabView.view(%fld[1], "", "Tribe");
@@ -1941,3 +1945,46 @@ function CreateTribeProcess()
 	// send the creation request
 	tn_community_browser_user_createClan(%tag, %append, %name, %info, %recru);
 }
+
+// New ShellRadioProfile for TRIBES and BUDDYLIST
+new GuiControlProfile(ShellRedRadioProfile) {
+	tab = "1";
+	canKeyFocus = "1";
+	modal = "1";
+	opaque = "0";
+	fillColor = "255 0 0 255";
+	fillColorHL = "255 255 255 255";
+	fillColorNA = "255 255 255 255";
+	border = "0";
+	borderColor = "0 0 0 255";
+	borderColorHL = "0 0 0 255";
+	borderColorNA = "0 0 0 255";
+	fontType = "Univers Condensed";
+	fontSize = "16";
+	fontColors[0] = "255 0 0 255";
+	fontColors[1] = "205 165 0 255";
+	fontColors[2] = "5 5 5 255";
+	fontColors[3] = "255 255 255 255";
+	fontColors[4] = "255 255 255 255";
+	fontColors[5] = "255 255 255 255";
+	fontColors[6] = "255 255 255 255";
+	fontColors[7] = "255 255 255 255";
+	fontColors[8] = "255 255 255 255";
+	fontColors[9] = "255 255 255 255";
+	fontColor = "255 0 0 255";
+	fontColorHL = "255 0 0 255";
+	fontColorNA = "5 5 5 255";
+	fontColorSEL = "255 255 255 255";
+	justify = "center";
+	textOffset = "0 0";
+	autoSizeWidth = "0";
+	autoSizeHeight = "0";
+	returnTab = "0";
+	numbersOnly = "0";
+	cursorColor = "0 0 0 255";
+	bitmap = "gui/shll_radio";
+	soundButtonDown = "sButtonDown";
+	soundButtonOver = "sButtonOver";
+
+	fixedExtent = "1";
+};

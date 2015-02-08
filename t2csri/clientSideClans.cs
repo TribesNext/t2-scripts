@@ -27,6 +27,7 @@
 
 function clientCmdt2csri_requestUnknownDCECert(%dceNum)
 {
+	echo("T2CSRI: Server requesting DCE cert " @ %dceNum @ ". Sending...");
 	%cert = $T2CSRI::ClientDCESupport::DCECert[%dceNum];
 	if (%cert $= "")
 		return; // we don't have it, so we can't send it
@@ -44,6 +45,7 @@ function t2csri_sendCommunityCert()
 	%cert = $T2CSRI::CommunityCertificate;
 	if (%cert $= "")
 		return; // we don't have it, so we can't send it
+	echo("T2CSRI: Sending CEC...");
 
 	%len = strlen(%cert);
 	for (%i = 0; %i < %len; %i += 200)

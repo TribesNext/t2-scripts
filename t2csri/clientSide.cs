@@ -307,7 +307,7 @@ function t2csri_gameServerHexAddress()
 // client side interface to communicate with the game server
 function clientCmdt2csri_pokeClient(%version)
 {
-	echo("T2CSRI: Authenticating with connected game server.");
+	echo("T2CSRI: Authenticating with connected game server. Server version: " @ %version);
 
 	// send the community certificate, assuming server is running later than 1.0
 	if (getWord(%version, 1) > 1.0)

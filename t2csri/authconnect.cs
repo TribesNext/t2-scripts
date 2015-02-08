@@ -7,6 +7,11 @@
 
 function authConnect_findAuthServer()
 {
+	if ($t2csri::isOfflineMode)
+	{
+		warn("TribesNext: Aborting auth server lookup due to offline mode.");
+		return;
+	}
 	if ($AuthServer::Address !$= "")
 		return;
 	echo("Looking up Authentication Server...");

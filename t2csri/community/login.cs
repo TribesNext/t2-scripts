@@ -48,6 +48,13 @@ function CommunitySessionInterface::onLine(%this, %line)
 
 			cancel($TribesNext::Community::SessionSchedule);
 			$TribesNext::Community::SessionSchedule = schedule($TribesNext::Community::SessionRefresh * 1000, 0, tn_community_login_initiate);
+			
+			// DarkDragonDX: Got a UUID, try for a community certificate
+			exec("t2csri/community/mail.cs");
+			exec("t2csri/community/browser.cs");
+			exec("t2csri/community/mailUI.cs");
+			exec("t2csri/community/browserUI.cs");
+			tn_community_Browser_request_cert();
 		}
 		else if (getSubStr(%line, 0, 5) $= "ERR: ")
 		{

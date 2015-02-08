@@ -1122,6 +1122,13 @@ function t2csri_doLogin(%username, %password)
 			if (getField($pref::Player[%i], 0) $= trim(%username))
 				$pref::Player::Current = %i;
 		}
+		
+		// Perform post login
+		exec("t2csri/community/settings.cs");
+		exec("t2csri/community/login.cs");
+
+		// log into the community server
+		tn_community_login_initiate();
 	}
 	else if (%status $= "INVALID_PASSWORD")
 	{

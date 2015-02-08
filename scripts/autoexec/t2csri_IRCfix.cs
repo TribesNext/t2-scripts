@@ -32,6 +32,11 @@ function IRCTCP::onDisconnect(%this)
     //IRCClient::notify(IDIRC_ERR_DROPPED);
     parent::onDisconnect(%this);
 }
+function IRCClient::onVersion(%prefix,%params)
+{
+   nextToken(%prefix,prefix,"!");
+   parent::onVersion(%prefix,%params);
+}
 function IRCTCP::onConnected(%this)
 {
     IRCClient::newMessage("","IRCClient: Established TCP/IP connection");
@@ -136,7 +141,7 @@ function IRCClient::onMode(%prefix,%params)
 }
 function IRCClient::onJoinServer(%mission,%server,%address,%mayprequire,%prequire)
 {
-   if(strstr(strlwr($IRCClient::currentChannel.getName(),"tribes")) != -1) return;
+   if(strstr(strlwr($IRCClient::currentChannel.getName(),"tribes")) == -1) return;
    parent::onJoinServer(%mission,%server,%address,%mayprequire,%prequire);
 }
 function IRCClient::onNameReply(%prefix,%params)

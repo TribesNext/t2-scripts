@@ -1,9 +1,10 @@
 // Tribes 2 Unofficial Authentication System
 // http://www.tribesnext.com/
-// Written by Electricutioner/Thyth
-// Copyright 2008 by Electricutioner/Thyth and the Tribes 2 Community System Reengineering Intitiative
+// Written by Thyth
+// Copyright 2008-2011 by Thyth and the Tribes 2 Community System Reengineering Intitiative
 
-// Authentication Server Interface Version 1.0: 12/29/2008
+// Authentication Server Interface Version 1.1: 2/13/2011
+// 1.0 -> 1.1: Added checks to abort any account server interaction if the game was launched in LAN mode.
 
 $Authentication::Mode::Available = 1;
 $Authentication::Mode::Name = 2;
@@ -91,14 +92,17 @@ function Authentication_transactionComplete()
 		{
 			// this generic error happens if a malformed request is sent to the server
 			error("Authentication: Unknown credential recovery status code returned from server.");
+			$Authentication::RecoveryError = "Malformed recovery request sent by client.";
 		}
 		else if (%buffer $= "NOTFOUND")
 		{
 			error("Authentication: No user with that name exists.");
+			$Authentication::RecoveryError = "No account exists with that username.";
 		}
 		else if (%buffer $= "INVALIDPASSWORD")
 		{
 			error("Authentication: Invalid password provided for that user.");
+			$Authentication::RecoveryError = "Invalid password for the specified account.";
 		}
 		else if (getWord(%buffer, 0) $= "CERT:")
 		{
@@ -112,7 +116,8 @@ function Authentication_transactionComplete()
 		}
 		else
 		{
-			error("Authentication: Unknown recovery status code returned from server.");
+			error("Authentication: Unknown error occured when retrieving credentials.");
+			$Authentication::RecoveryError = "Unknown credential recovery error.";
 		}
 	}
 	else if ($Authentication::Status::ActiveMode == $Authentication::Mode::Sign)
@@ -156,6 +161,11 @@ function Authentication_transactionComplete()
 // determine if the server is available
 function Authentication_checkAvail()
 {
+	if ($t2csri::isOfflineMode)
+	{
+		warn("TribesNext: Aborting account server interaction due to offline mode.");
+		return;
+	}
 	if ($Authentication::Status::ActiveMode != 0)
 	{
 		// already a request active, retry this one in 10 seconds
@@ -177,6 +187,11 @@ function Authentication_checkAvail()
 // determine if the given name is acceptable/available
 function Authentication_checkName(%name)
 {
+	if ($t2csri::isOfflineMode)
+	{
+		warn("TribesNext: Aborting account server interaction due to offline mode.");
+		return;
+	}
 	if ($Authentication::Status::ActiveMode != 0)
 	{
 		// already a request active, retry this one in 10 seconds
@@ -198,6 +213,11 @@ function Authentication_checkName(%name)
 // request a certificate and encrypted exponent from the authentication server
 function Authentication_recoverAccount(%payload)
 {
+	if ($t2csri::isOfflineMode)
+	{
+		warn("TribesNext: Aborting account server interaction due to offline mode.");
+		return;
+	}
 	if ($Authentication::Status::ActiveMode != 0)
 	{
 		// already a request active, retry this one in 10 seconds
@@ -219,6 +239,11 @@ function Authentication_recoverAccount(%payload)
 // request a new account certificate
 function Authentication_registerAccount(%payload)
 {
+	if ($t2csri::isOfflineMode)
+	{
+		warn("TribesNext: Aborting account server interaction due to offline mode.");
+		return;
+	}
 	if ($Authentication::Status::ActiveMode != 0)
 	{
 		// already a request active, retry this one in 10 seconds
