@@ -530,7 +530,7 @@ function CommunityBrowserInterface::onLine(%this, %line)
 			Canvas.popDialog(CreateTribeDlg);
 			// for the newly created clan, create a new tab switch us to it
 			LaunchTabView.viewTab("BROWSER", TribeAndWarriorBrowserGui, 0);
-			TWBTabView.view(%fld[1], "", "Tribe");
+			TWBTabView.view(%id, "", "Tribe");
 	}
 }
 
