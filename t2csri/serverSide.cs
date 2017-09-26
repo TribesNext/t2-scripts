@@ -56,6 +56,12 @@ function serverCmdt2csri_sendCertChunk(%client, %chunk)
 function t2csri_gameClientHexAddress(%client)
 {
 	%ip = %client.getAddress();
+
+	// DarkDragonDX: Fix listen server crashes because .getAddress() returns 
+	// "local" when in listen
+	if (trim(%ip) $= "local")
+		%ip = "IP:127.0.0.1:" @ $Host::Port; // Just build the local IP
+	
 	%ip = getSubStr(%ip, strstr(%ip, ":") + 1, strlen(%ip));
 	%ip = getSubStr(%ip, 0, strstr(%ip, ":"));
 	%ip = strReplace(%ip, ".", " ");
@@ -291,7 +297,7 @@ package t2csri_server
 	// clan support will be implemented via delegation to a community server
 	function GameConnection::getAuthInfo(%client)
 	{
-		if (%client.getAddress() $= "Local" && %client.t2csri_authInfo $= "")
+		if (trim(%client.getAddress()) $= "local" && %client.t2csri_authInfo $= "")
 			%client.t2csri_authInfo = WONGetAuthInfo();
 		return %client.t2csri_authInfo;
 	}
